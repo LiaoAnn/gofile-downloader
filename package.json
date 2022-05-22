@@ -1,0 +1,21 @@
+{
+  "name": "gofile-downloader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ansi-colors": "^4.1.1",
+    "bluebird": "^3.7.2",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.0.0",
+    "file-system": "^2.2.2",
+    "git": "github:LiaoAnn/cli-progress",
+    "request-promise": "^4.2.6"
+  }
+}
