@@ -58,7 +58,7 @@ const multiBar = new cliProgress.MultiBar({
                 downloadPath: path.resolve(path.dirname(require.main.filename), "done"),
                 token,
                 progressBarUpdateCallback: (size) => {
-                    bar.increment(size);
+                    bar.update(size);
                 },
                 progressBarStopCallback: () => {
                     multiBar.update();

@@ -80,15 +80,31 @@ class File {
             .map(() => Math.ceil(this.fileSize / this.chunkCount));
         if (!fs.existsSync(this.chunkPath)) {
             fs.mkdirSync(this.chunkPath, { recursive: true });
+        } else {
+            fs.readdirSync(this.chunkPath).forEach(file => {
+                fs.unlinkSync(path.resolve(this.chunkPath, file));
+            })
         }
+
+        let interval = setInterval(() => {
+            let files = fs.readdirSync(this.chunkPath);
+            let size = files
+                .map(file => fs.statSync(path.resolve(this.chunkPath, file)).size)
+                .reduce((a, b) => a + b, 0);
+            this.progressBarUpdateCallback && this.progressBarUpdateCallback(size);
+            if (size == this.fileSize) {
+                clearInterval(interval);
+            }
+        }, 1000);
         let filePaths = await Promise.all(bytesPerChunks.map((chunkCount, index) => this.DownloadChunk(index, chunkCount)));
-        this.progressBarStopCallback && this.progressBarStopCallback();
+        clearInterval(interval)
         await File.MergeChunks(filePaths, this.downloadPath);
         fs.rmSync(this.chunkPath, { recursive: true, force: true });
+        this.progressBarUpdateCallback && this.progressBarUpdateCallback(this.fileSize);
     }
 
 
-    async DownloadChunk(index, chunkSize) {
+    DownloadChunk(index, chunkSize) {
         const downloadPath = path.resolve(this.chunkPath, `${this.fileName}.part${index + 1}`)
         const from = index * chunkSize;
         const end = Math.min(this.fileSize, (index + 1) * chunkSize) - 1;
@@ -104,11 +120,10 @@ class File {
                 if (Math.floor(res.statusCode / 100) == 2) {
                     res.pipe(fs.createWriteStream(downloadPath))
                         .once("close", () => {
-                            this.progressBarUpdateCallback && this.progressBarUpdateCallback(chunkSize);
                             resolve(downloadPath)
                         });
                 } else {
-                    return this.DownloadChunk(index, chunkSize);
+                    resolve(this.DownloadChunk(index, chunkSize));
                     // reject(new Error(`[${res.statusCode}] ${res.statusMessage}`))
                 }
             }))
