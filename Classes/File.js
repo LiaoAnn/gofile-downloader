@@ -57,6 +57,18 @@ class File {
         return tokenData.data.token;
     }
 
+    static formatBytes = (bytes, decimals = 1) => {
+        if (bytes === 0) return '0 Bytes';
+    
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
     static MergeChunks = async (filePaths, targetPath) => {
         let filePath = filePaths.pop();
         filePaths.length > 0 && await File.MergeChunks(filePaths, targetPath);
@@ -86,13 +98,18 @@ class File {
             })
         }
 
+        let currSize = 0;
         let interval = setInterval(() => {
             let files = fs.readdirSync(this.chunkPath);
             let size = files
                 .map(file => fs.statSync(path.resolve(this.chunkPath, file)).size)
                 .reduce((a, b) => a + b, 0);
-            this.progressBarUpdateCallback && this.progressBarUpdateCallback(size);
-            if (size == this.fileSize) {
+            this.progressBarUpdateCallback && this.progressBarUpdateCallback(size, {
+                currDownloadSpeed: `${File.formatBytes(size - currSize)}/s`,
+                currFormatSize: File.formatBytes(size)
+            });
+            currSize = size;
+            if (currSize == this.fileSize) {
                 clearInterval(interval);
             }
         }, 1000);

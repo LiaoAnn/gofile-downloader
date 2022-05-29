@@ -14,7 +14,7 @@ global.Promise = Promise;
 const { URL, Password, Thread_Count } = process.env;
 const sha256Hash = crypto.createHash("sha256");
 const multiBar = new cliProgress.MultiBar({
-    format: '"{file}" |{bar}| {percentage}% | {value}/{total} bytes',
+    format: '"{file}" |{bar}| {percentage}% | {currDownloadSpeed} | {currFormatSize} / {totalFormatSize}',
     hideCursor: true,
     barCompleteChar: '\u2588',
     barIncompleteChar: '\u2591',
@@ -49,7 +49,12 @@ const multiBar = new cliProgress.MultiBar({
     const contents = Object.values(data.contents)
         .filter(values => values.type == "file")
         .map(({ link, size, name }) => {
-            let bar = multiBar.create(size, 0, { file: name });
+            let bar = multiBar.create(size, 0,
+                {
+                    file: name,
+                    totalFormatSize: File.formatBytes(size)
+                }
+            );
             const options = {
                 url: link,
                 fileSize: size,
@@ -57,8 +62,8 @@ const multiBar = new cliProgress.MultiBar({
                 chunkCount: Thread_Count,
                 downloadPath: path.resolve(path.dirname(require.main.filename), "done"),
                 token,
-                progressBarUpdateCallback: (size) => {
-                    bar.update(size);
+                progressBarUpdateCallback: (size, obj) => {
+                    bar.update(size, obj);
                 },
                 progressBarStopCallback: () => {
                     multiBar.update();
