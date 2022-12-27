@@ -52,7 +52,9 @@ const multiBar = new cliProgress.MultiBar({
             let bar = multiBar.create(size, 0,
                 {
                     file: name,
-                    totalFormatSize: File.formatBytes(size)
+                    totalFormatSize: File.formatBytes(size),
+                    currDownloadSpeed: `${File.formatBytes(0)}/s`,
+                    currFormatSize: File.formatBytes(0)
                 }
             );
             const options = {
